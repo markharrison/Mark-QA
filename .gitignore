@@ -3,6 +3,16 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Node / npm
+node_modules/
+package-lock.json
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+
 # User-specific files
 *.rsuser
 *.suo
