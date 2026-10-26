@@ -7,14 +7,26 @@ The application displays alarms from an API on a Leaflet map.
 
 Prerequisite: Node.js 22 or newer with npm. From the repository root:
 
+Windows / PowerShell:
+
+```powershell
+npm ci
+npx playwright install chromium firefox webkit
+npm test
+```
+
+Linux:
+
 ```sh
 npm ci
 npx playwright install --with-deps chromium firefox webkit
 npm test
 ```
 
-On Windows, `npx playwright install chromium firefox webkit` is sufficient; on
-Linux, `--with-deps` installs required system libraries and may need sudo.
+On Linux, `--with-deps` installs required system libraries and may need sudo.
+Wait for each command to succeed before running the next. If `npm ci` fails,
+Playwright is not installed and `npm test` cannot run; fix the installation
+error first.
 No application build step is required. There is no existing linter or build task.
 
 Playwright automatically starts **live-server** at `http://127.0.0.1:8080`,
