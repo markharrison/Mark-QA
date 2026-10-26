@@ -78,4 +78,12 @@ async function screenshot(page, name, testInfo) {
     }
 }
 
-module.exports = { test, expect, openApp, screenshot };
+async function expectAlert(page, message, action) {
+    const handled = page.waitForEvent('dialog').then(async dialog => {
+        expect(dialog.message()).toBe(message);
+        await dialog.accept();
+    });
+    await Promise.all([handled, action()]);
+}
+
+module.exports = { test, expect, openApp, screenshot, expectAlert };

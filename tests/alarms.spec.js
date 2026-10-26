@@ -1,4 +1,4 @@
-const { test, expect, openApp, screenshot } = require('./fixtures');
+const { test, expect, openApp, screenshot, expectAlert } = require('./fixtures');
 
 test.beforeEach(async ({ page, api }) => {
     await page.clock.setFixedTime(new Date('2026-01-15T12:00:00Z'));
@@ -42,11 +42,8 @@ for (const status of ['green', 'amber', 'red']) {
         await page.getByLabel('Description:').fill('Regression test alarm');
         await page.getByLabel('Status:').selectOption(status);
         if (status === 'amber') await screenshot(page, 'add-alarm', testInfo);
-        const dialog = page.waitForEvent('dialog');
-        await page.getByRole('button', { name: 'Add Alarm', exact: true }).click();
-        const alert = await dialog;
-        expect(alert.message()).toBe('Alarm added successfully!');
-        await alert.accept();
+        await expectAlert(page, 'Alarm added successfully!', () =>
+            page.getByRole('button', { name: 'Add Alarm', exact: true }).click());
         await expect(page.locator('#add-alarm-modal')).toBeHidden();
         await expect(page.locator('.custom-marker')).toHaveCount(4);
         const counts = { green: '2 | 🟠 1 | 🔴 1', amber: '1 | 🟠 2 | 🔴 1', red: '1 | 🟠 1 | 🔴 2' };
@@ -130,11 +127,8 @@ test('confirms deletion of the selected alarm and refreshes the map', async ({ p
     await page.locator('.popup-content').getByRole('button', { name: 'Delete' }).click();
     await expect(page.locator('#delete-alarm-name')).toHaveText('York sensor');
     await screenshot(page, 'delete-alarm', testInfo);
-    const dialog = page.waitForEvent('dialog');
-    await page.locator('#confirm-delete-btn').click();
-    const alert = await dialog;
-    expect(alert.message()).toBe('Alarm deleted successfully!');
-    await alert.accept();
+    await expectAlert(page, 'Alarm deleted successfully!', () =>
+        page.locator('#confirm-delete-btn').click());
     await expect(page.locator('#delete-modal')).toBeHidden();
     await expect(page.locator('.custom-marker')).toHaveCount(2);
     await expect(page.locator('#alarm-count')).toHaveText('Total: 2 (🟢 0 | 🟠 1 | 🔴 1)');
@@ -181,12 +175,7 @@ test('polls after 60 seconds and handles an empty response', async ({ page, api 
 
 test('reports initial load failure and recovers on refresh', async ({ page, api }) => {
     api.fail = 'GET';
-    const dialog = page.waitForEvent('dialog');
-    const navigation = page.goto('/');
-    const alert = await dialog;
-    expect(alert.message()).toBe('Failed to load alarms. Please try again.');
-    await alert.accept();
-    await navigation;
+    await expectAlert(page, 'Failed to load alarms. Please try again.', () => page.goto('/'));
     await expect(page.locator('#last-update')).toHaveText('Last updated: Never');
     api.fail = null;
     await page.getByRole('button', { name: 'Refresh Now' }).click();
@@ -210,12 +199,8 @@ for (const method of ['GET', 'POST', 'DELETE']) {
             await page.locator('.popup-content').getByRole('button', { name: 'Delete' }).click();
             action = page.locator('#confirm-delete-btn');
         }
-        const dialog = page.waitForEvent('dialog');
-        await action.click();
-        const alert = await dialog;
         const verb = { GET: 'load alarms', POST: 'add alarm', DELETE: 'delete alarm' }[method];
-        expect(alert.message()).toBe(`Failed to ${verb}. Please try again.`);
-        await alert.accept();
+        await expectAlert(page, `Failed to ${verb}. Please try again.`, () => action.click());
         await expect(page.locator('.custom-marker')).toHaveCount(3);
         await expect(page.locator('#last-update')).toHaveText('Last updated: 12:00:00');
         if (method === 'POST') {
